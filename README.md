@@ -1,4 +1,6 @@
 # **Projeto de Monitoramento de Umidade e Temperatura com Arduino**
+## Análise e Desenvolvimento de Sistemas - Universidade Presbiteriana Mackenzie
+## Objetos Inteligentes Conectados
 
 Este projeto utiliza um Arduino para monitorar a umidade e temperatura do ambiente usando o sensor DHT11, exibindo os valores em um display LCD 16x2 com interface I2C. O projeto também inclui um relé que pode ser acionado automaticamente com base nos níveis de umidade configurados.
 

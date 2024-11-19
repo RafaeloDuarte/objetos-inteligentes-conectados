@@ -8,10 +8,9 @@ Este projeto utiliza um Arduino para monitorar a umidade e temperatura do ambien
 
 ## **Componentes Utilizados**
 - **Arduino Uno (ou compatível)**
-- **Sensor DHT11**
+- **Modulo / Sensor Dht11 Temperatura E Umidade - Arduino**
 - **Display LCD 16x2 com módulo I2C (HD44780)**
 - **Módulo Relé**
-- **Resistor de 10kΩ (se necessário para o sensor DHT11)**
 - **Jumpers e Protoboard**
 - **Fonte de alimentação (via USB ou externa para o Arduino)**
 
@@ -72,50 +71,87 @@ Este projeto utiliza um Arduino para monitorar a umidade e temperatura do ambien
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
 
-#define DHTPIN 2        // Pino onde o DHT11 está conectado
-#define DHTTYPE DHT11   // Defina o tipo de sensor DHT
-#define RELAY_PIN 3     // Pino de controle do relé
+// Configuração do LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Substitua "0x27" pelo endereço correto
 
+// Configuração do DHT11
+#define DHTPIN 2          // Pino onde está conectado o DHT11
+#define DHTTYPE DHT11     // Tipo do sensor
 DHT dht(DHTPIN, DHTTYPE);
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Configuração do Relé
+#define RELAYPIN 3        // Pino do relé
+#define UMIDADE_LIMITE 50 // Limite mínimo de umidade desejado
 
 void setup() {
-  pinMode(RELAY_PIN, OUTPUT);  // Configura o pino do relé como saída
-  lcd.begin(16, 2);            // Inicializa o LCD
-  lcd.backlight();             // Liga o backlight do LCD
-  dht.begin();                 // Inicializa o sensor DHT11
+  // Inicializa o LCD
+  lcd.init();           // Inicializa o módulo I2C do LCD
+  lcd.backlight();      // Ativa a luz de fundo do LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Iniciando...");
+  delay(2000);          // Exibe mensagem inicial por 2 segundos
+
+  // Inicializa o DHT11
+  dht.begin();
+
+  // Configuração do pino do relé
+  pinMode(RELAYPIN, OUTPUT);
+  digitalWrite(RELAYPIN, LOW); // Relé desligado inicialmente
+
+  // Inicia comunicação serial
+  Serial.begin(9600);
+  Serial.println("Sistema Iniciado");
 }
 
 void loop() {
-  float humidity = dht.readHumidity();   // Lê a umidade
-  float temperature = dht.readTemperature(); // Lê a temperatura
+  delay(2000); // Aguarda 2 segundos entre leituras
 
-  // Verifica se a leitura foi bem-sucedida
+  // Lê os valores do DHT11
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
+
+  // Verifica se a leitura é válida
   if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("Erro ao ler o sensor!");
+    lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Erro de leitura");
+    lcd.print("Erro no sensor!");
     return;
   }
 
-  // Exibe os valores no LCD
-  lcd.setCursor(0, 0);
-  lcd.print("Umidade: ");
-  lcd.print(humidity);
-  lcd.print("%");
+  // Exibe valores no Monitor Serial
+  Serial.print("Umidade: ");
+  Serial.print(humidity);
+  Serial.println(" %");
 
-  lcd.setCursor(0, 1);
+  Serial.print("Temperatura: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+
+  // Exibe valores no LCD
+  lcd.clear();
+  lcd.setCursor(0, 0); // Linha 1
   lcd.print("Temp: ");
   lcd.print(temperature);
   lcd.print("C");
 
-  // Aciona o relé com base na umidade
-  if (humidity < 40) {
-    digitalWrite(RELAY_PIN, HIGH);  // Liga o relé
-  } else {
-    digitalWrite(RELAY_PIN, LOW);   // Desliga o relé
-  }
+  lcd.setCursor(0, 1); // Linha 2
+  lcd.print("Umid: ");
+  lcd.print(humidity);
+  lcd.print("%");
 
-  delay(2000); // Atualiza os valores a cada 2 segundos
+  // Controle do relé
+  if (humidity < UMIDADE_LIMITE) {
+    digitalWrite(RELAYPIN, HIGH); // Liga o relé
+    Serial.println("Relé: LIGADO");
+    lcd.setCursor(11, 1);
+    lcd.print("ON ");
+  } else {
+    digitalWrite(RELAYPIN, LOW); // Desliga o relé
+    Serial.println("Relé: DESLIGADO");
+    lcd.setCursor(11, 1);
+    lcd.print("OFF");
+  }
 }
 ```
 
@@ -127,16 +163,16 @@ void loop() {
 2. **Exibição no LCD**
    O LCD exibe os valores em tempo real.
 3. **Controle do Relé**
-   - Se a umidade estiver abaixo de 40%, o relé será ativado.
+   - Se a umidade estiver abaixo de 50%, o relé será ativado.
    - Caso contrário, o relé será desligado.
 
 ---
 
 ## **Ajustes Finais**
-- **Configuração do Relé**: Conecte o dispositivo controlado (ex.: umidificador) aos terminais do relé, seguindo as orientações do fabricante.
-- **Ajuste da Umidade**: Modifique o limite de umidade no código (linha `if (humidity < 40)`).
+- **Configuração do Relé**: Conecte o dispositivo controlado (ex.: umidificador ou sinalizador) aos terminais do relé, seguindo as orientações do fabricante.
+- **Ajuste da Umidade**: Modifique o limite de umidade no código (linha `if (humidity < 50)`).
 
 ---
 
 ## **Licença**
-Este projeto é de código aberto e pode ser usado, modificado e compartilhado livremente. 😊
+Este projeto é de código aberto e pode ser usado, modificado e compartilhado livremente.

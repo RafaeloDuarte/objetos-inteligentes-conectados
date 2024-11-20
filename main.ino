@@ -3,7 +3,7 @@
 #include <DHT.h>
 
 // Configuração do LCD
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Substitua "0x27" pelo endereço correto
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Configuração do DHT11
 #define DHTPIN 2          // Pino onde está conectado o DHT11
